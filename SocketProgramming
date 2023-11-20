@@ -1,0 +1,87 @@
+Client Code:
+import java.io.*;
+import java.net.*;
+
+public class Client {
+    public static void main(String[] args) {
+        try {
+            // Create a socket to connect to the server at IP address "localhost" and port 12345
+            Socket socket = new Socket("localhost", 12345);
+
+            // Create input and output streams for communication
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+            // Send a message to the server
+            out.println("Hello from the client!");
+
+            // Receive a response from the server
+            String responseFromServer = in.readLine();
+            System.out.println("Server says: " + responseFromServer);
+
+            // Close the socket
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+Server Code:
+
+import java.io.*;
+import java.net.*;
+
+public class Server {
+    public static void main(String[] args) {
+        try {
+            // Create a ServerSocket that listens on port 12345
+            ServerSocket serverSocket = new ServerSocket(12345);
+            System.out.println("Server is waiting for connections...");
+
+            while (true) {
+                // Wait for a client to connect
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connected.");
+
+                // Create a new thread to handle the client
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                Thread thread = new Thread(clientHandler);
+                thread.start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class ClientHandler implements Runnable {
+    private Socket clientSocket;
+
+    public ClientHandler(Socket clientSocket) {
+        this.clientSocket = clientSocket;
+    }
+
+    @Override
+    public void run() {
+        try {
+            // Create input and output streams for communication with the client
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            // Read a message from the client
+            String messageFromClient;
+            while ((messageFromClient = in.readLine()) != null) {
+                System.out.println("Client says: " + messageFromClient);
+
+                // Send a response to the client
+                out.println("Hello from the server!");
+            }
+
+            // Close the client socket
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
